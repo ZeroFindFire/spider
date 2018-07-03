@@ -1,5 +1,19 @@
 #coding=utf-8
-
+def rq_encode(response):
+	rp = response
+	ct=rp.content
+	import re 
+	pattern = 'charset=(.*?)>'
+	rst=re.findall(pattern,ct)
+	if (len(rst)>0):
+		rst=rst[0].lower()
+		if rst.find('utf-8')>=0:
+			rp.encoding = 'utf-8'
+		elif rst.find('gbk')>=0:
+			rp.encoding = 'gbk'
+		elif rp.encoding=='ISO-8859-1' and rst.find('iso-8859-1')<0:
+			rp.encoding = 'gbk'
+	return response
 # cookies format from selinium to requests
 def cookie_change(cks):
 	out = {}
@@ -7,7 +21,7 @@ def cookie_change(cks):
 		out[ck['name']]=ck['value']
 	return out
 
-def is_html(url):
+def maybe_html(url):
 	url=url.split("?")[0]
 	rurl=url[::-1]
 	if len(rurl)<=4:
@@ -18,7 +32,7 @@ def is_html(url):
 			return True 
 	return False
 
-def ispage(ct_type):
+def is_html(ct_type):
 	page_types=["text/html"]
 	for pg_type in page_types:
 		if ct_type.find(pg_type)>=0:
@@ -30,9 +44,9 @@ def html2urls(contents,base_url):
 	soup=bs4.BeautifulSoup(contents,"html5lib")
 	lnks=[ i for i in soup.descendants if type(i) == bs4.element.Tag and (i.has_attr('src') or i.has_attr('href'))]
 	olnks=[ i.attrs['src'] for i in lnks if i.has_attr('src')] + [ i.attrs['href'] for i in lnks if i.has_attr('href')]
-	lnks=[i.lower() for i in olnks if len(i)>4]
+	lnks=[i.lower() for i in olnks]
 	outs = fullurls(lnks,base_url)
-	return outs 
+	return outs
 
 def html2lnks(contents,base_url):
 	import bs4
@@ -51,6 +65,7 @@ def html2lnks(contents,base_url):
 def host(url,nodes=-1):
 	url=url.split("?")[0]
 	url = url.split("://")[-1]
+	url = url.split("/")[0]
 	if nodes < 0:
 		return url 
 	urls = url.split(".")[:nodes]
@@ -81,7 +96,7 @@ def fullurl(url,base):
 		url=prefix+"://"+base_url+url 
 	else:
 		url=base_path+url 
-	url=reduce(url)
+	url=reduce_url(url)
 	deal_url[url]=(backurl,backbase)
 	return url
 
@@ -102,10 +117,10 @@ def fullurls(urls,base):
 		elif url[:2]=="//":
 			url=prefix+":"+url 
 		elif url[0]=='/':
-			url=prefix+":"+base_url+url 
+			url=prefix+"://"+base_url+url 
 		else:
 			url=base_path+url 
-		url=reduce(url)
+		url=reduce_url(url)
 		outs.append(url)
 	return outs
 
@@ -120,7 +135,7 @@ def header( refer = None):
 user_agent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36';
 
 
-def reduce(url):
+def reduce_url(url):
 	urls = url.split("?")
 	url = urls[0]
 	parm = ""

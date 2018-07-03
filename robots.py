@@ -2,7 +2,21 @@
 
 import requests
 import threading
-
+import url_base
+def host(url):
+	url = url.split('?')[0]
+	url =  url.split("://")[-1]
+	url = url.split("/")[0]
+	return url 
+def phost(url):
+	url = url.split('?')[0]
+	urls =  url.split("://")
+	url = urls[-1]
+	px = ""
+	if len(urls)==2:
+		px=urls[0]+"://"
+	url = url.split("/")[0]
+	return px+url 
 class Robots(object):
 	lock = threading.Lock()
 	maps = {}
@@ -25,6 +39,7 @@ class Robots(object):
 		return allow(maps[hst],url,user_agent)
 	@staticmethod 
 	def delay(url, user_agent = '*'):
+		user_agent = ''.join(user_agent.split(" "))
 		hst = host(url)
 		maps = Robots.maps
 		Robots.check_host(url)
@@ -41,7 +56,7 @@ def robots(url):
 	uname = ""
 	kv = ""
 	try:
-		rp=requests.get(url,header(),timeout = 5.0)
+		rp=requests.get(url,url_base.header(),timeout = 5.0)
 		rp.encoding = 'utf-8'
 		contents = rp.text.lower()
 		#print "robotss:",contents
@@ -49,8 +64,10 @@ def robots(url):
 		#print "Robots:",contents
 		user_agent = "user-agent"
 		if contents.count(user_agent)==0 or contents[0] == '<':
+			#print "bad robots.txt"
 			return outs
 		user_agents = contents.split("user-agent:")[1:]
+		#print "num of ua:",len(user_agents)
 		for user_agent in user_agents:
 			lst = "".join(user_agent.split("\r")).split("\n")
 			uname = lst[0]
@@ -70,9 +87,9 @@ def robots(url):
 					outs[uname][kv[0]]=int(kv[1])
 		return outs			
 	except Exception,e:
-		return outs
 		print "error:",e, url
 		print "KEY:",uname,kv
+		return outs
 		try:
 			import traceback
 			traceback.print_exc()
@@ -80,6 +97,7 @@ def robots(url):
 			print "Can't use module traceback to show details"
 		return outs
 def allow(robots,url,user_agent="*"):
+	user_agent = ''.join(user_agent.split(" "))
 	hst = phost(url)
 	url = url[len(hst):]
 	if user_agent not in robots:
