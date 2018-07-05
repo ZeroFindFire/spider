@@ -74,7 +74,15 @@ def host(url,nodes=-1):
 	urls = url.split(".")[:nodes]
 	return ".".join(urls)
 	
-
+def http_base(url):
+	hst = host(url)
+	url=url.split("?")[0]
+	splts = url.split("://")
+	if len(splts)>1:
+		pfx = splts[0]+"://"
+	else:
+		pfx = ""
+	return pfx + hst
 
 deal_url = {}
 def fullurl(url,base):

@@ -20,36 +20,46 @@ def phost(url):
 class Robots(object):
 	lock = threading.Lock()
 	maps = {}
-	@staticmethod
-	def check_host(url):
+	locked = True
+	def __init__(self,locked=True):
+		self.locked = locked
+		self.maps = {}
+	#@staticmethod
+	def check_host(self,url):
 		hst = host(url)
-		maps = Robots.maps 
-		with Robots.lock:
+		maps = self.maps 
+		if not self.locked:
 			exist = hst in maps 
+		else:
+			with Robots.lock:
+				exist = hst in maps 
 		if not exist:
 			rst = robots(url)
-			with Robots.lock:
+			if not self.locked:
 				maps[hst] = rst
+			else:
+				with Robots.lock:
+					maps[hst] = rst
 		
-	@staticmethod
-	def allow(url,user_agent="*"):
+	#@staticmethod
+	def allow(self,url,user_agent="*"):
 		hst = host(url)
-		maps = Robots.maps
-		Robots.check_host(url)
+		maps = self.maps
+		self.check_host(url)
 		return allow(maps[hst],url,user_agent)
-	@staticmethod 
-	def delay(url, user_agent = '*'):
+	#@staticmethod 
+	def delay(self,url, user_agent = '*'):
 		user_agent = ''.join(user_agent.split(" "))
 		hst = host(url)
-		maps = Robots.maps
-		Robots.check_host(url)
+		maps = self.maps
+		self.check_host(url)
 		robots = maps[hst]
 		if user_agent not in robots:
 			user_agent = "*"
 		if user_agent not in robots:
 			return 0
 		return robots[user_agent]['crawl-delay']
-			
+show = False		
 def robots(url):
 	url = phost(url) + "/robots.txt"
 	outs = {}
@@ -87,7 +97,9 @@ def robots(url):
 					outs[uname][kv[0]]=int(kv[1])
 		return outs			
 	except Exception,e:
-		return outs
+		global show
+		if not show:
+			return outs
 		print "error:",e, url
 		print "KEY:",uname,kv
 		#return outs
