@@ -1,6 +1,15 @@
 # coding=utf-8
 Contents = ""
-
+def show(keys):
+	for k in keys:
+		print k[0],k[1]
+def remove(keys,*names):
+	for name in names:
+		objs = [k for k in keys if k[0] == name]
+		if len(objs)==0:
+			continue 
+		keys.remove(objs[0])
+	show(keys)
 # get words of n&v cut from jieba 
 def pcut(contents):
 	global Contents
@@ -118,4 +127,4 @@ def contents(soup):
 			rst+=contents(child)
 		else:
 			rst.append(child.string)
-	return rst
+	return ''.join(rst)

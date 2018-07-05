@@ -56,7 +56,7 @@ def robots(url):
 	uname = ""
 	kv = ""
 	try:
-		rp=requests.get(url,url_base.header(),timeout = 5.0)
+		rp=requests.get(url,headers=url_base.header(),timeout = 5.0)
 		rp.encoding = 'utf-8'
 		contents = rp.text.lower()
 		#print "robotss:",contents
@@ -87,9 +87,10 @@ def robots(url):
 					outs[uname][kv[0]]=int(kv[1])
 		return outs			
 	except Exception,e:
+		return outs
 		print "error:",e, url
 		print "KEY:",uname,kv
-		return outs
+		#return outs
 		try:
 			import traceback
 			traceback.print_exc()

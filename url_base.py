@@ -26,10 +26,13 @@ def maybe_html(url):
 	rurl=url[::-1]
 	if len(rurl)<=4:
 		return False
+	rurl = rurl.split("://")[-1]
 	htmls=["html","htm","php","/","jsp"]
 	for html in htmls:
 		if rurl.find(html[::-1])==0:
 			return True 
+	return False
+	return len(rurl.split("/"))==1
 	return False
 
 def is_html(ct_type):
@@ -145,7 +148,7 @@ def reduce_url(url):
 	cnt=url.count("..")
 	if cnt==0:
 		return "".join(url.split("/."))+parm 
-	turls  =url.plit("://")
+	turls  =url.split("://")
 	pfx = ""
 	if len(turls)==1:
 		pfx = turls[0] + "://"
