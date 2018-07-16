@@ -1,9 +1,22 @@
 #coding=utf-8
 import requests 
 import bs4 
+from multi import multi 
 import rsp
 import threading
 import time
+import socks 
+import socket 
+socket.socket = socks.socksocket
+"""
+
+python
+from spider import proxy
+outs= proxy.proxy()
+sks=proxy.sock_proxy(outs)
+csks = proxy.checked_socks(sks)
+
+"""
 def to_url(proxy):
 	return "http://"+proxy['ip']+":"+proxy['port']
 def to_proxies(proxy):
@@ -41,6 +54,39 @@ def proxy(url=url):
 		ptype = str(tds[5].string).lower()
 		outs.append({'ip':ip,'port':port,'address':dest,'type':ptype})
 	return outs
+def sock_proxy(outs):
+	rst = []
+	for obj in outs:
+		if obj['type'].find("sock")>=0 and obj['type'].find("5")>=0:
+			rst.append(obj)
+	return rst 
+def checked_socks(proxys):
+	rst = []
+	for proxy in proxys:
+		if not check_sock(proxy):
+			continue 
+		rst.append(proxy)
+	return rst 
+
+def bind_sock_proxy(sockobj,proxy):
+	sockobj.setproxy(socks.PROXY_TYPE_SOCKS5, proxy['ip'],proxy['port'])
+	return sockobj 
+def default_sock_proxy(proxy):
+	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5,proxy['ip'],proxy['port'])
+	socket.socket = socks.socksocket 
+def check_sock(proxy, url = url):
+	default_sock_proxy(proxy)
+	try:
+		rp=requests.get(url)
+		return True
+	except Exception,e:
+		print "except",e
+		return False
+check_lock = threading.Lock()
+def check_sock_lock(proxy):
+	global check_lock
+	with check_lock:
+		return check_sock(proxy)
 
 class Proxy(threading.Thread):
 	def __init__(self, update_time = 10.0):
@@ -72,16 +118,20 @@ class Proxy(threading.Thread):
 			return self.proxy.rand()
 		else:
 			return None
-class ProxyCheck(rsp.Spider):
+
+
+"""
+class ProxyCheck(multi.Multi):
 	timeout = 5.0
 	show = False
 	def __init__(self,proxies):
-		rsp.Spider.__init__(self)
+		multi.Multi.__init__(self,True)
+
 		self.lock = threading.Lock()
-		self.outs = {'http':[],'https':[]}
+		self.outs = {'http':[],'https':[],'socks4/5':[]}
 		self.urls = []
 		for px in proxies:
-			if px['type'] not in ['http','https']:
+			if px['type'] not in self.outs.keys():
 				continue
 			url = px['type']+"://www.baidu.com" 
 			mp = {"url" : url, 'proxies' : to_proxies(px), 'remain' : px}
@@ -106,6 +156,7 @@ class ProxyCheck(rsp.Spider):
 			https_proxy = to_url(https[random.randint(0,len(https)-1)])
 			maps['https'] = https_proxy
 		return maps
+		"""
 """
 python
 from spider import proxy as px
