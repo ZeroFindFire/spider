@@ -15,7 +15,8 @@ from spider import proxy
 outs= proxy.proxy()
 sks=proxy.sock_proxy(outs)
 csks = proxy.checked_socks(sks)
-
+rq=proxy.requests
+rq.get("http://www.baidu.com")
 """
 def to_url(proxy):
 	return "http://"+proxy['ip']+":"+proxy['port']
@@ -49,7 +50,7 @@ def proxy(url=url):
 	for obj in rst:
 		tds = obj.find_all('td')
 		ip = str(tds[1].string)
-		port = str(tds[2].string)
+		port = int(str(tds[2].string))
 		dest = tds[3].string
 		ptype = str(tds[5].string).lower()
 		outs.append({'ip':ip,'port':port,'address':dest,'type':ptype})
@@ -77,7 +78,7 @@ def default_sock_proxy(proxy):
 def check_sock(proxy, url = url):
 	default_sock_proxy(proxy)
 	try:
-		rp=requests.get(url)
+		rp=requests.head(url,timeout = 1.0)
 		return True
 	except Exception,e:
 		print "except",e
